@@ -72,7 +72,6 @@ static inline void hsalsa_core(v8u* x) {
   (v8u)(*((uint32_t*)(X)))
 #define H(x) ((uint32_t)(((x) >> 32) & 0xffffffff))
 #define L(x) ((uint32_t)((x) & 0xffffffff))
-
 static inline void salsavi_load(v8u* x,
                                 const uint8_t* k,
                                 const uint8_t* n,
