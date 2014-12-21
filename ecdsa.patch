@@ -1,0 +1,40 @@
+diff -r 3d68989bd1ea src/crypto/ecdsa/ecdsa.go
+--- a/src/crypto/ecdsa/ecdsa.go	Mon Oct 27 08:46:18 2014 -0700
++++ b/src/crypto/ecdsa/ecdsa.go	Sun Dec 21 13:42:25 2014 -0800
+@@ -13,6 +13,7 @@
+ //     http://www.secg.org/download/aid-780/sec1-v2.pdf
+ 
+ import (
++	"code.google.com/p/go.crypto/sha3"
+ 	"crypto"
+ 	"crypto/elliptic"
+ 	"encoding/asn1"
+@@ -123,6 +124,19 @@
+ // pair of integers. The security of the private key depends on the entropy of
+ // rand.
+ func Sign(rand io.Reader, priv *PrivateKey, hash []byte) (r, s *big.Int, err error) {
++	drand := sha3.NewShake256()
++	drand.Write(priv.D.Bytes())
++	randlen := (priv.Curve.Params().BitSize + 7) / 16
++	if randlen > 32 {
++		randlen = 32
++	}
++	randomness := make([]byte, randlen)
++	if _, err = drand.Read(randomness); err != nil {
++		return
++	}
++	drand.Write(randomness)
++	drand.Write(hash)
++
+ 	// See [NSA] 3.4.1
+ 	c := priv.PublicKey.Curve
+ 	N := c.Params().N
+@@ -130,7 +144,7 @@
+ 	var k, kInv *big.Int
+ 	for {
+ 		for {
+-			k, err = randFieldElement(c, rand)
++			k, err = randFieldElement(c, drand)
+ 			if err != nil {
+ 				r = nil
+ 				return
